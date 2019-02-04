@@ -205,7 +205,7 @@ public class ProductoDAOImpl implements ProductoDAO{
 			}
 
 			if (producto.getIdOferta()!=null) {
-				addClause(queryString, first, " P.ID_OFERTA IS NOT NULL ");
+				addClause(queryString, first, " P.ID_OFERTA LIKE ? ");
 				first = false;
 			}
 
@@ -220,22 +220,22 @@ public class ProductoDAOImpl implements ProductoDAO{
 			}	
 
 			if (producto.getValoracionMedia()!=null) {
-				addClause(queryString, first, " P.VALORACION_MEDIA IS NOT NULL ");
+				addClause(queryString, first, " P.VALORACION_MEDIA LIKE ? ");
 				first = false;
 			}
 
 			if (producto.getIdLiga()!=null) {
-				addClause(queryString, first, " P.ID_LIGA IS NOT NULL ");
+				addClause(queryString, first, " P.ID_LIGA LIKE ? ");
 				first = false;
 			}
 
 			if (producto.getIdEquipo()!=null) {
-				addClause(queryString, first, " P.ID_EQUIPO IS NOT NULL ");
+				addClause(queryString, first, " P.ID_EQUIPO LIKE ? ");
 				first = false;
 			}
 
 			if (producto.getIdMarca()!=null) {
-				addClause(queryString, first, " P.ID_MARCA IS NOT NULL ");
+				addClause(queryString, first, " P.ID_MARCA LIKE ? ");
 				first = false;
 			}
 

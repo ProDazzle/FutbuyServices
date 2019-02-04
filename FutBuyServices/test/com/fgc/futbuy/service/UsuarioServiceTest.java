@@ -36,14 +36,14 @@ public class UsuarioServiceTest {
 		d.setPiso(4);
 
 		Usuario u = new Usuario();
-		u.setEmail("prueba@estovaiii.com");
-		u.setNombre("Pepee");
-		u.setApellido1("Pruebaa");
-		u.setApellido2("Probandoo");
-		u.setContrasenha("holaa");
+		u.setEmail("franguimil99@gmail.com");
+		u.setNombre("Pesapee");
+		u.setApellido1("Pruesabaa");
+		u.setApellido2("Probsasandoo");
+		u.setContrasenha("holaasasa");
 		u.setFechaNacimiento(new Date());
-		u.setNombreUsuario("prueba");
-		u.setGenero("H");
+		u.setNombreUsuario("pruebasas");
+		u.setGenero("Hombre");
 		u.setDireccion(d);
 
 		usuarioService.create(u);

@@ -307,7 +307,7 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 				preparedStatement.setString(i++,u.getApellido2());
 
 			if (u.getFechaNacimiento()!=null) 
-				preparedStatement.setDate(i++, (java.sql.Date) u.getFechaNacimiento());
+				preparedStatement.setDate(i++, new java.sql.Date(u.getFechaNacimiento().getTime()));
 
 			if (u.getGenero()!=null) 
 				preparedStatement.setString(i++,u.getGenero());

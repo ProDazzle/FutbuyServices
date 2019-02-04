@@ -96,7 +96,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 		
 		
 		u = usuarioDAO.create(c,u); 
-		mailService.sendMail("Bienvenido a FutBuy", "Bienvenido "+u.getNombre(), "futbuyweb@gmail.com");
+		mailService.sendMail("Bienvenido a FutBuy", "Bienvenido "+u.getNombre(), u.getEmail());
 		
 		
 		commit=true;

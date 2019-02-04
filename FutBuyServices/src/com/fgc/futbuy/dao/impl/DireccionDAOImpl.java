@@ -226,7 +226,7 @@ public class DireccionDAOImpl implements DireccionDAO{
 		try {
 
 			String queryString ="DELETE FROM DIRECCION " 
-							+ "WHERE ID_DIRECCION = ? ";
+							+ "WHERE ID_USUARIO = ? ";
 
 
 			preparedStatement = connection.prepareStatement(queryString);
