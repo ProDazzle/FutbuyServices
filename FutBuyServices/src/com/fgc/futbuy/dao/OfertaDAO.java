@@ -21,13 +21,13 @@ public interface OfertaDAO {
 	public Boolean exists(Connection connection, Integer id) 
     		throws DataException;
 
-    public List<Oferta> findAll(Connection connection) 
+    public List<Oferta> findAll(Connection connection,int startIndex, int count) 
     	throws DataException;
     
     public Integer countAll(Connection connection) 
      		throws DataException;   
      
-    public List<Oferta> findByCriteria(Connection connection, OfertaCriteria oc)
+    public List<Oferta> findByCriteria(Connection connection, OfertaCriteria oc,int startIndex, int count)
     	throws InstanceNotFoundException,DataException;
     
     public Oferta create(Connection connection, Oferta o) 

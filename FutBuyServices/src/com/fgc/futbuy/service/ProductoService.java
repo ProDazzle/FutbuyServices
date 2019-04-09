@@ -9,10 +9,10 @@ import com.fgc.futbuy.model.Producto;
 
 public interface ProductoService {
 	
-	    public List<Producto> findByCriteria(ProductoCriteria Producto, String idioma)
+	    public Results<Producto> findByCriteria(ProductoCriteria Producto, String idioma, int startIndex, int count)
 	   	    throws DataException;
 	    
-	    public List<Producto> findAll(String idioma) 
+	    public List<Producto> findAll(String idioma, int startIndex, int count) 
 	    	throws DataException;  
 	    
 	    public Producto findById(Integer id, String idioma) 

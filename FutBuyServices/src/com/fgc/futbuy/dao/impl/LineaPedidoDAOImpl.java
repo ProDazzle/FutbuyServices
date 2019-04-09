@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.LineaPedidoDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
 import com.fgc.futbuy.exceptions.DataException;
@@ -17,17 +20,20 @@ import com.fgc.futbuy.model.LineaPedidoId;
 import com.fgc.futbuy.model.Usuario;
 
 
-/**
- * @author hector.ledo.doval
- *
- */
+
 public class LineaPedidoDAOImpl implements LineaPedidoDAO{
 
 public LineaPedidoDAOImpl() {}
+
+private static Logger logger = LogManager.getLogger(CategoriaDAOImpl.class);
 	
 	@Override
 	public LineaPedido findById(Connection connection, LineaPedidoId id) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -40,6 +46,8 @@ public LineaPedidoDAOImpl() {}
 			
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			int i = 1;                
 			preparedStatement.setInt(i++, id.getIdPedido());
@@ -50,7 +58,7 @@ public LineaPedidoDAOImpl() {}
 			LineaPedido lp = null;
 
 			if (resultSet.next()) {
-				lp = loadNext(connection, resultSet);				
+				lp = loadNext(resultSet);				
 			} else {
 				throw new InstanceNotFoundException("PedidoDetails not found", Usuario.class.getName());
 			}
@@ -58,6 +66,7 @@ public LineaPedidoDAOImpl() {}
 			return lp;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -68,6 +77,10 @@ public LineaPedidoDAOImpl() {}
 	@Override
 	public Boolean exists(Connection connection, LineaPedidoId id) 
 			throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
 		
 		boolean exist = false;
 
@@ -83,6 +96,8 @@ public LineaPedidoDAOImpl() {}
 
 			preparedStatement = connection.prepareStatement(queryString);
 			
+			logger.debug(queryString);
+			
 			int i = 1;
 			preparedStatement.setInt(i++, id.getIdPedido());
 			preparedStatement.setInt(i++, id.getIdProducto());
@@ -94,6 +109,7 @@ public LineaPedidoDAOImpl() {}
 			}
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -107,6 +123,9 @@ public LineaPedidoDAOImpl() {}
 	@Override
 	public List<LineaPedido> findByPedido (Connection connection, Integer idPedido)
 			throws DataException {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+idPedido);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -121,6 +140,8 @@ public LineaPedidoDAOImpl() {}
 
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			int i = 1;                
 			preparedStatement.setInt(i++, idPedido);
@@ -132,12 +153,13 @@ public LineaPedidoDAOImpl() {}
 			LineaPedido lp = null;
 			
 			while (resultSet.next()) {
-				lp = loadNext (connection, resultSet);
+				lp = loadNext(resultSet);
 				results.add(lp);
 			}
 			return results;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -149,6 +171,9 @@ public LineaPedidoDAOImpl() {}
 	@Override
 	public LineaPedido create(Connection connection, LineaPedido lp) 
 			throws DuplicateInstanceException, DataException {
+		if(logger.isDebugEnabled()) {
+			logger.debug("LineaPedido= "+lp);
+		}
 
 		PreparedStatement preparedStatement = null;
 		
@@ -167,6 +192,8 @@ public LineaPedidoDAOImpl() {}
 
 			preparedStatement = connection.prepareStatement(queryString);
 			
+			logger.debug(queryString);
+			
 			int i = 1;     
 			preparedStatement.setInt(i++,lp.getIdPedido());
 			preparedStatement.setInt(i++,lp.getIdProducto());
@@ -183,6 +210,7 @@ public LineaPedidoDAOImpl() {}
 			return lp;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -193,6 +221,9 @@ public LineaPedidoDAOImpl() {}
 	@Override
 	public Integer delete(Connection connection, LineaPedidoId id) 
 			throws InstanceNotFoundException, DataException {
+		if(logger.isDebugEnabled()) {
+			logger.debug("LineaPedido= "+id);
+		}
 		PreparedStatement preparedStatement = null;
 
 		try {
@@ -202,6 +233,8 @@ public LineaPedidoDAOImpl() {}
 					+ "WHERE ID_PEDIDO = ? AND ID_PRODUCTO = ? ";
 			
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, id.getIdPedido());
@@ -216,6 +249,7 @@ public LineaPedidoDAOImpl() {}
 			return removedRows;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -223,7 +257,7 @@ public LineaPedidoDAOImpl() {}
 	}
 	
 	
-	private LineaPedido loadNext(Connection connection, ResultSet resultSet)
+	private LineaPedido loadNext(ResultSet resultSet)
 		throws SQLException, DataException {
 
 			int i = 1;

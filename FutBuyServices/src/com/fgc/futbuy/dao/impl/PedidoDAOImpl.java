@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fgc.futbuy.dao.LineaPedidoDAO;
 import com.fgc.futbuy.dao.PedidoDAO;
@@ -24,6 +26,8 @@ import com.fgc.futbuy.exceptions.InstanceNotFoundException;
 
 public class PedidoDAOImpl implements PedidoDAO {
 	
+	private static Logger logger = LogManager.getLogger(PedidoDAOImpl.class);
+	
 	private LineaPedidoDAO lineaPedidoDAO = null;
 
 	public PedidoDAOImpl() {
@@ -33,6 +37,10 @@ public class PedidoDAOImpl implements PedidoDAO {
 	@Override
 	public Pedido findById(Connection connection, Integer id) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -45,6 +53,8 @@ public class PedidoDAOImpl implements PedidoDAO {
 			
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			int i = 1;                
 			preparedStatement.setInt(i++, id);
@@ -63,6 +73,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 			return p;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -73,6 +84,11 @@ public class PedidoDAOImpl implements PedidoDAO {
 	@Override
 	public Boolean exists(Connection connection, Integer id) 
 			throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
+		
 		boolean exist = false;
 
 		PreparedStatement preparedStatement = null;
@@ -86,6 +102,8 @@ public class PedidoDAOImpl implements PedidoDAO {
 					"WHERE ID_PEDIDO = ? ";
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -97,6 +115,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 			}
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -107,7 +126,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 	}
 
 	@Override
-	public List<Pedido> findAll(Connection connection) 
+	public List<Pedido> findAll(Connection connection,int startIndex, int count) 
 			throws DataException {
 
 		PreparedStatement preparedStatement = null;
@@ -122,19 +141,27 @@ public class PedidoDAOImpl implements PedidoDAO {
 
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			resultSet = preparedStatement.executeQuery();
 
 			List<Pedido> results = new ArrayList<Pedido>();                        
 			Pedido p = null;
-			while(resultSet.next()) {
-				p = loadNext(connection, resultSet);
-				results.add(p);               	
+			int currentCount = 0;
+
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					p = loadNext(connection, resultSet);
+					results.add(p);               	
+					currentCount++;                	
+				} while ((currentCount < count) && resultSet.next()) ;
 			}
 
 			return results;
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -156,6 +183,8 @@ public class PedidoDAOImpl implements PedidoDAO {
 							+ " FROM PEDIDO ";
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 						resultSet = preparedStatement.executeQuery();
 
@@ -167,6 +196,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 			}
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -175,8 +205,12 @@ public class PedidoDAOImpl implements PedidoDAO {
 	}
 	
 	@Override
-	public List<Pedido> findByCriteria(Connection connection, PedidoCriteria pedido)
+	public List<Pedido> findByCriteria(Connection connection, PedidoCriteria pedido,int startIndex, int count)
 			throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("PedidoCriteria= "+pedido);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -218,6 +252,8 @@ public class PedidoDAOImpl implements PedidoDAO {
 			
 			preparedStatement = connection.prepareStatement(queryString.toString(),
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			int i = 1;  
 			
@@ -237,17 +273,20 @@ public class PedidoDAOImpl implements PedidoDAO {
 			
 			List<Pedido> pedidos = new ArrayList<Pedido>();                        
 			Pedido p = null;
-			while (resultSet.next()) {
-				p = loadNext(connection, resultSet);						
-				pedidos.add(p);
-			}
-			
-			if (pedidos.isEmpty()) {
-				throw new DataException("No se han encontrado resultados");
+			int currentCount = 0;
+
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					p = loadNext(connection, resultSet);
+					pedidos.add(p);               	
+					currentCount++;                	
+				} while ((currentCount < count) && resultSet.next()) ;
 			}
 
 			return pedidos;
+			
 	} catch (SQLException e) {
+		logger.error(e.getMessage(),e);
 		throw new DataException("Hemos encontrado un problema" + e);
 	} finally {
 		JDBCUtils.closeResultSet(resultSet);
@@ -291,6 +330,10 @@ public class PedidoDAOImpl implements PedidoDAO {
 	@Override
 	public Pedido create(Connection connection, Pedido p) 
 			throws DuplicateInstanceException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Pedido= "+p);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -301,6 +344,8 @@ public class PedidoDAOImpl implements PedidoDAO {
 
 			preparedStatement = connection.prepareStatement(queryString,
 					Statement.RETURN_GENERATED_KEYS);
+			
+			logger.debug(queryString);
 			
 			int i = 1;   
 			preparedStatement.setInt(i++,p.getIdUsuario());
@@ -333,6 +378,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 			return p;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -341,6 +387,10 @@ public class PedidoDAOImpl implements PedidoDAO {
 
 	public void update(Connection connection, Pedido p) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Pedido= "+p);
+		}
 		PreparedStatement preparedStatement = null;
 		try {
 			
@@ -352,6 +402,8 @@ public class PedidoDAOImpl implements PedidoDAO {
 					"WHERE ID_PEDIDO = ? ";
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, p.getIdUsuario());
@@ -375,6 +427,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 			createLineasPedido(connection, p.getIdPedido(), p.getLineaspedido());
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);    
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -384,6 +437,11 @@ public class PedidoDAOImpl implements PedidoDAO {
 	@Override
 	public Integer delete(Connection connection, Integer id) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
+		
 		PreparedStatement preparedStatement = null;
 
 		try {
@@ -395,6 +453,8 @@ public class PedidoDAOImpl implements PedidoDAO {
 					+ "WHERE ID_PEDIDO = ? ";
 			
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setLong(i++, id);
@@ -407,6 +467,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 			return removedRows;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -416,6 +477,10 @@ public class PedidoDAOImpl implements PedidoDAO {
 	
 	protected void deleteLineasPedido(Connection c, Integer idPedido)
 			throws SQLException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("IdPedido= "+idPedido);
+		}
 
 			PreparedStatement preparedStatement = null;
 
@@ -433,6 +498,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 				preparedStatement.executeUpdate();
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {
 				JDBCUtils.closeStatement(preparedStatement);
@@ -441,6 +507,10 @@ public class PedidoDAOImpl implements PedidoDAO {
 	
 	protected void createLineasPedido(Connection connection, Integer idPedido,  List<LineaPedido> lineas)
 			throws SQLException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+idPedido);
+		}
 
 		PreparedStatement preparedStatement = null;
 		try {          
@@ -448,7 +518,9 @@ public class PedidoDAOImpl implements PedidoDAO {
 			int i;
 			for (LineaPedido lt: lineas ) {
 				queryString = "INSERT INTO LINEAPEDIDO (ID_PEDIDO, ID_PRODUCTO, PRECIO_UNITARIO, PRECIO_TOTAL, CANTIDAD) VALUES (?, ?, ?, ?, ?)";
-				preparedStatement = connection.prepareStatement(queryString);				
+				preparedStatement = connection.prepareStatement(queryString);
+				
+				logger.debug(queryString);
 
 				i = 1;     
 				preparedStatement.setInt(i++, idPedido);
@@ -466,6 +538,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 				JDBCUtils.closeStatement(preparedStatement);
 			} 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -473,7 +546,12 @@ public class PedidoDAOImpl implements PedidoDAO {
 	}
 
 	@Override
-	public List<Pedido> findAllUsuario(Connection connection, Integer id) throws DataException {
+	public List<Pedido> findAllUsuario(Connection connection, Integer id,int startIndex, int count) throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
+		
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 
@@ -487,19 +565,28 @@ public class PedidoDAOImpl implements PedidoDAO {
 
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			resultSet = preparedStatement.executeQuery();
 
 			List<Pedido> results = new ArrayList<Pedido>();                        
 			Pedido p = null;
-			while(resultSet.next()) {
-				p = loadNext(connection, resultSet);
-				results.add(p);               	
+			
+			int currentCount = 0;
+
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					p = loadNext(connection, resultSet);
+					results.add(p);               	
+					currentCount++;                	
+				} while ((currentCount < count) && resultSet.next()) ;
 			}
 
 			return results;
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);

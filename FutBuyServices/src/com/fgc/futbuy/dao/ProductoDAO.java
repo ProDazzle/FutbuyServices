@@ -9,14 +9,17 @@ import com.fgc.futbuy.exceptions.DuplicateInstanceException;
 import com.fgc.futbuy.exceptions.InstanceNotFoundException;
 import com.fgc.futbuy.model.Producto;
 import com.fgc.futbuy.service.ProductoCriteria;
+import com.fgc.futbuy.service.Results;
 
 
 public interface ProductoDAO {
 	
-    public List<Producto> findByCriteria(Connection connection, ProductoCriteria producto, String idioma)
+    public Results<Producto> findByCriteria(Connection connection, ProductoCriteria producto, String idioma, 
+		 	int startIndex, int count)
         	throws DataException;
 
-    public List<Producto> findAll(Connection connection, String idioma) 
+    public List<Producto> findAll(Connection connection, String idioma, 
+		 	int startIndex, int count) 
     	throws DataException;
      
 	public Boolean exists(Connection connection, Integer id) 
@@ -36,5 +39,9 @@ public interface ProductoDAO {
         
     public Integer delete(Connection connection, Integer id) 
     		throws InstanceNotFoundException, DataException;
+
+
+
+	
 
 }

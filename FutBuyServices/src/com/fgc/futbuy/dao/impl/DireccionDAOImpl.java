@@ -8,7 +8,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fgc.futbuy.dao.DireccionDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
@@ -19,9 +20,16 @@ import com.fgc.futbuy.model.Direccion;
 
 
 public class DireccionDAOImpl implements DireccionDAO{
+	
+	private static Logger logger = LogManager.getLogger(DireccionDAOImpl.class);
 
 	@Override
 	public Direccion findByUsuario(Connection connection, Integer id) throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
+		
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 		try {
@@ -32,9 +40,10 @@ public class DireccionDAOImpl implements DireccionDAO{
 					+"WHERE ID_USUARIO = ? ";
 			
 			// Preparar a query
-			System.out.println("Creating statement...");
 			preparedStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
+			logger.debug(sql);
+			
 			// Establece os parámetros
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -46,13 +55,14 @@ public class DireccionDAOImpl implements DireccionDAO{
 			Direccion d = null;
 
 			if (resultSet.next()) {
-				d =  loadNext(connection, resultSet);			
+				d =  loadNext(resultSet);			
 	
 			} 
 
 			return d;
 			
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -71,9 +81,11 @@ public class DireccionDAOImpl implements DireccionDAO{
 					+"FROM DIRECCION ";
 
 			// Preparar a query
-			System.out.println("Creating statement...");
+
 			preparedStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
+			logger.debug(sql);
+			
 			resultSet = preparedStatement.executeQuery();			
 			//STEP 5: Extract data from result set			
 
@@ -82,13 +94,14 @@ public class DireccionDAOImpl implements DireccionDAO{
 
 
 			while(resultSet.next()) {
-				d = loadNext(connection, resultSet);
+				d = loadNext(resultSet);
 				results.add(d);               	
 			}
 
 			return results;
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -98,6 +111,11 @@ public class DireccionDAOImpl implements DireccionDAO{
 
 	@Override
 	public Direccion findById(Connection connection, Integer id) throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
+		
 		Direccion d = null;
 
 		PreparedStatement preparedStatement = null;
@@ -110,9 +128,10 @@ public class DireccionDAOImpl implements DireccionDAO{
 					+"WHERE ID_DIRECCION = ? ";
 
 			// Preparar a query
-			System.out.println("Creating statement...");
 			preparedStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
+			logger.debug(sql);
+			
 			// Establece os parámetros
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -122,7 +141,7 @@ public class DireccionDAOImpl implements DireccionDAO{
 			//STEP 5: Extract data from result set			
 
 			if (resultSet.next()) {
-				d =  loadNext(connection, resultSet);			
+				d =  loadNext(resultSet);			
 				//System.out.println("Cargado "+u);
 			} else {
 				throw new InstanceNotFoundException("Non se atopou direccion con id = "+id, Direccion.class.getName());
@@ -130,6 +149,7 @@ public class DireccionDAOImpl implements DireccionDAO{
 
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -140,7 +160,7 @@ public class DireccionDAOImpl implements DireccionDAO{
 	}
 
 
-	private Direccion loadNext(Connection connection, ResultSet resultSet) throws SQLException{
+	private Direccion loadNext(ResultSet resultSet) throws SQLException{
 
 
 		Direccion d = new Direccion();
@@ -172,6 +192,11 @@ public class DireccionDAOImpl implements DireccionDAO{
 	
 	@Override
 	public Direccion create(Connection connection, Direccion d) throws DuplicateInstanceException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Direccion= "+d);
+		}
+		
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 		try {          
@@ -180,6 +205,8 @@ public class DireccionDAOImpl implements DireccionDAO{
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 			preparedStatement = connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS);
+			
+			logger.debug(queryString);
 
 			int i = 1;     			
 			
@@ -211,6 +238,7 @@ public class DireccionDAOImpl implements DireccionDAO{
 			return d;
 			
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -221,6 +249,11 @@ public class DireccionDAOImpl implements DireccionDAO{
 
 	@Override
 	public Integer delete(Connection connection, Integer id) throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
+		
 		PreparedStatement preparedStatement = null;
 
 		try {
@@ -230,6 +263,8 @@ public class DireccionDAOImpl implements DireccionDAO{
 
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -252,6 +287,11 @@ public class DireccionDAOImpl implements DireccionDAO{
 
 	@Override
 	public void update(Connection connection, Direccion d) throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Direccion= "+d);
+		}
+		
 		PreparedStatement preparedStatement = null;
 		StringBuilder queryString = null;
 		try {	
@@ -301,6 +341,8 @@ public class DireccionDAOImpl implements DireccionDAO{
 			queryString.append("WHERE ID_DIRECCION = ?");
 
 			preparedStatement = connection.prepareStatement(queryString.toString());
+			
+			logger.debug(queryString);
 
 
 			int i = 1;
@@ -339,6 +381,7 @@ public class DireccionDAOImpl implements DireccionDAO{
 			}     
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);    
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);

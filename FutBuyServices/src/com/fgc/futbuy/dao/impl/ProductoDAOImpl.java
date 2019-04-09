@@ -11,6 +11,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 import com.fgc.futbuy.dao.ProductoDAO;
@@ -18,20 +20,25 @@ import com.fgc.futbuy.dao.util.JDBCUtils;
 import com.fgc.futbuy.exceptions.DataException;
 import com.fgc.futbuy.exceptions.DuplicateInstanceException;
 import com.fgc.futbuy.exceptions.InstanceNotFoundException;
-import com.fgc.futbuy.model.Talla;
 import com.fgc.futbuy.model.Color;
 import com.fgc.futbuy.model.Jugador;
 import com.fgc.futbuy.model.Producto;
-import com.fgc.futbuy.service.TallaService;
+import com.fgc.futbuy.model.Talla;
 import com.fgc.futbuy.service.ColorService;
 import com.fgc.futbuy.service.JugadorService;
 import com.fgc.futbuy.service.ProductoCriteria;
-import com.fgc.futbuy.service.impl.TallaServiceImpl;
+import com.fgc.futbuy.service.Results;
+import com.fgc.futbuy.service.TallaService;
 import com.fgc.futbuy.service.impl.ColorServiceImpl;
 import com.fgc.futbuy.service.impl.JugadorServiceImpl;
+import com.fgc.futbuy.service.impl.TallaServiceImpl;
+
+
 
 
 public class ProductoDAOImpl implements ProductoDAO{
+	
+	private static Logger logger=LogManager.getLogger(ProductoDAOImpl.class);
 
 	public ProductoDAOImpl() {
 	}
@@ -166,7 +173,8 @@ public class ProductoDAOImpl implements ProductoDAO{
 
 
 	@Override
-	public List<Producto> findByCriteria(Connection connection, ProductoCriteria producto, String idioma)
+	public Results<Producto> findByCriteria(Connection connection, ProductoCriteria producto, String idioma, 
+			int startIndex, int count)
 			throws DataException {
 
 		PreparedStatement preparedStatement = null;
@@ -288,16 +296,26 @@ public class ProductoDAOImpl implements ProductoDAO{
 
 			resultSet = preparedStatement.executeQuery();
 
-			List<Producto> results = new ArrayList<Producto>();                        
+			List<Producto> pageEntites = new ArrayList<Producto>();                        
 			Producto e = null;
-			while (resultSet.next()) {
-				e = loadNext(connection, resultSet);						
-				results.add(e);
-			}
+			int currentCount = 0;
 
-			if (results.isEmpty()) {
-				throw new DataException("No se han encontrado resultados");
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					e = loadNext(connection, resultSet);
+					pageEntites.add(e);               	
+					currentCount++;                	
+				} while ((currentCount < count) && resultSet.next()) ;
 			}
+			
+			
+			int totalRows = JDBCUtils.getTotalRows(resultSet);
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("Total rows: "+ totalRows + ". Query: "+queryString);
+			}
+			
+			Results<Producto> results = new Results<Producto>(pageEntites, startIndex, totalRows);
 
 			return results;
 		} catch (SQLException e) {
@@ -309,8 +327,9 @@ public class ProductoDAOImpl implements ProductoDAO{
 	}
 
 	@Override
-	public List<Producto> findAll(Connection connection,String idioma) 
-			throws DataException {
+	public List<Producto> findAll(Connection connection, String idioma, 
+			int startIndex, int count) 
+					throws DataException {
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -342,9 +361,13 @@ public class ProductoDAOImpl implements ProductoDAO{
 			List<Producto> results = new ArrayList<Producto>();                        
 			Producto e = null;
 
-			while (resultSet.next()) {
-				e = loadNext(connection, resultSet);						
-				results.add(e);
+
+			int currentCount = 0;
+						
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					e = loadNext(connection, resultSet);
+					results.add(e);  
 				//Buscamos LAS TALLAS DE CADA PRODUCTO
 				List<Talla> tallas = tallaService.findByProducto(e.getIdProducto(), idioma);
 				if (!tallas.isEmpty())
@@ -359,11 +382,10 @@ public class ProductoDAOImpl implements ProductoDAO{
 					e.setJugadores(jugadores);
 			}
 
-			if (results.isEmpty()) {
-				throw new DataException("No se han encontrado resultados");
-			}
-
-			return results;
+			 while ((currentCount < count) && resultSet.next()) ;
+		}
+		
+		return results;
 
 		} catch (SQLException e) {
 			throw new DataException(e);

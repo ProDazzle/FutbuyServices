@@ -3,6 +3,7 @@ package com.fgc.futbuy.model;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Producto extends AbstractValueObject{
 
 	private Integer idProducto = null;
@@ -140,8 +141,29 @@ public class Producto extends AbstractValueObject{
 		this.jugadores = jugadores;
 	}
 
-
-	
+	@Override
+	public boolean equals(Object o) {
+		
+		if(o ==null|| !(o instanceof Producto)) {
+			return false;
+		}
+		Producto other = (Producto) o;
+		if (this.getIdProducto()==null && other.getIdProducto()==null) {
+			return false;
+		}
+		if(!this.getIdProducto().equals(other.getIdProducto())) {
+			return false;
+		}
+		
+		return true;
+		
+	}
+	@Override
+	public int hashCode() {
+		if(idProducto == null) return Integer.MAX_VALUE;
+		
+		return idProducto.hashCode();
+	}
 
 	
 }

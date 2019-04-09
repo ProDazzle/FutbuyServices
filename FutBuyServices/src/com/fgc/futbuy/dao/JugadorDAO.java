@@ -19,9 +19,9 @@ public interface JugadorDAO {
 	public Boolean exists(Connection connection, Integer id) 
     		throws DataException;
 
-	public List<Jugador> findByProducto(Connection connection, Integer idProducto) 
+	public List<Jugador> findByProducto(Connection connection, Integer idProducto,int startIndex, int count) 
 			throws DataException;
 	
-    public List<Jugador> findAll(Connection connection) 
+    public List<Jugador> findAll(Connection connection,int startIndex, int count) 
         	throws DataException;
 }

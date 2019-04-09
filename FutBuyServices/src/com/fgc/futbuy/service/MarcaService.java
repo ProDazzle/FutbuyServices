@@ -15,7 +15,7 @@ public interface MarcaService {
 	public Boolean exists(Integer id) 
 			throws DataException;
 	
-    public List<Marca> findAll() 
+    public List<Marca> findAll( int startIndex, int count) 
 	    	throws DataException; 
 
 }

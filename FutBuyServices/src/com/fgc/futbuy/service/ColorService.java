@@ -10,16 +10,16 @@ import com.fgc.futbuy.model.Color;
 
 public interface ColorService {
 	
-	public Color findById(Integer id) 
+	public Color findById(Integer id, String idioma) 
 			throws InstanceNotFoundException, DataException;
 
 	public Boolean exists(Integer id) 
 			throws DataException;
 
-	public List<Color> findByProducto(Integer id, String idioma) 
+	public List<Color> findByProducto(Integer id, String idioma,int startIndex, int count) 
 			throws DataException;
 	
-    public List<Color> findAll(String idioma) 
+    public List<Color> findAll(String idioma,int startIndex, int count) 
 	    	throws DataException; 
 
 }

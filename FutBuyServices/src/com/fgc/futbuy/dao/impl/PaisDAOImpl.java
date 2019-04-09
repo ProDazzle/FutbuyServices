@@ -7,15 +7,24 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.util.JDBCUtils;
 import com.fgc.futbuy.dao.PaisDAO;
 import com.fgc.futbuy.exceptions.DataException;
 import com.fgc.futbuy.model.Pais;
 
 public class PaisDAOImpl implements PaisDAO{
+	
+	private static Logger logger = LogManager.getLogger(PaisDAOImpl.class);
 
 	@Override
 	public List<Pais> findAll(Connection connection, String idIdioma) throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Idioma = "+idIdioma);
+		}
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 
@@ -31,6 +40,8 @@ public class PaisDAOImpl implements PaisDAO{
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			
+			logger.debug(queryString);
+			
 			int i = 1;                
 			preparedStatement.setString(i++, idIdioma.toUpperCase());
 
@@ -42,12 +53,13 @@ public class PaisDAOImpl implements PaisDAO{
 			Pais p = null;
 
 			while (resultSet.next()) {
-				p = loadNext (connection, resultSet);
+				p = loadNext (resultSet);
 				results.add(p);
 			}
 			return results;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -55,7 +67,7 @@ public class PaisDAOImpl implements PaisDAO{
 		}
 	}
 
-	private Pais loadNext(Connection connection, ResultSet resultSet)
+	private Pais loadNext(ResultSet resultSet)
 			throws SQLException, DataException {
 
 		int i = 1;               

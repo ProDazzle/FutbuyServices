@@ -13,13 +13,13 @@ public interface PedidoService {
 		public Pedido findById(Integer id) 
 	   		throws InstanceNotFoundException, DataException;
 		 
-	    public List<Pedido> findByCriteria(PedidoCriteria pedido)
+	    public List<Pedido> findByCriteria(PedidoCriteria pedido, int startIndex, int count)
 	   	    throws DataException;
 	    
-	    public List<Pedido> findAll() 
+	    public List<Pedido> findAll( int startIndex, int count) 
 	    	throws DataException; 
 	    
-	    public List<Pedido> findAllUsuario(Integer id) 
+	    public List<Pedido> findAllUsuario(Integer id, int startIndex, int count) 
 		    	throws DataException; 
 	    
 		public Boolean exists(Integer id) 

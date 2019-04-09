@@ -15,6 +15,6 @@ public interface LigaDAO {
 	public Boolean exists(Connection connection, Integer id) 
     		throws DataException;
 	
-    public List<Liga> findAll(Connection connection) 
+    public List<Liga> findAll(Connection connection,int startIndex, int count) 
         	throws DataException;
 }

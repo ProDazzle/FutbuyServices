@@ -19,7 +19,7 @@ public class UsuarioServiceTest {
 
 	public void testFindById() 
 			throws Exception {
-		Usuario u = usuarioService.findById(1);
+		Usuario u = usuarioService.findById(3);
 		System.out.println(u);
 	}
 
@@ -107,8 +107,8 @@ public class UsuarioServiceTest {
 
 		try {
 
-			//test.testFindById();
-			test.testCreate();
+			test.testFindById();
+			//test.testCreate();
 			//test.testLogin(); //ok
 			//test.testUpdate(); //ok --cambia datos de usuario, non direccion
 			//test.testUpdateDireccion(); //ok --cambia direccion

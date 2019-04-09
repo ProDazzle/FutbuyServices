@@ -7,7 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fgc.futbuy.dao.TallaDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
@@ -17,14 +18,18 @@ import com.fgc.futbuy.model.Talla;
 
 public class TallaDAOImpl implements TallaDAO {
 		
-
+	private static Logger logger = LogManager.getLogger(TallaDAOImpl.class);
 	
 		public TallaDAOImpl() {
 		}
 		
 		@Override
-		public Talla findById(Connection connection, Integer id) 
+		public Talla findById(Connection connection, Integer id, String idioma) 
 				throws InstanceNotFoundException, DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 
 			PreparedStatement preparedStatement = null;
 			ResultSet resultSet = null;
@@ -35,14 +40,17 @@ public class TallaDAOImpl implements TallaDAO {
 								"SELECT C.ID_TALA, CI.NOMBRE_TALLA " + 
 								"FROM TALLA C  " +
 								"INNER JOIN IDIOMA_TALLA CI ON C.ID_TALLA = CI.ID_TALLA " +
-								"WHERE C.ID_TALLA = ?";
+								"WHERE C.ID_TALLA = ? AND CI.ID_IDIOMA LIKE ?";
 
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				int i = 1;                
-				preparedStatement.setLong(i++, id);
+				preparedStatement.setInt(i++, id);
+				preparedStatement.setString(i++, idioma);
 
 				// Execute query            
 				resultSet = preparedStatement.executeQuery();
@@ -59,6 +67,7 @@ public class TallaDAOImpl implements TallaDAO {
 				return e;
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -67,8 +76,12 @@ public class TallaDAOImpl implements TallaDAO {
 		}
 		
 		@Override
-		public List<Talla> findAll(Connection connection, String idioma) 
+		public List<Talla> findAll(Connection connection, String idioma,int startIndex, int count) 
 				throws DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Idioma= "+idioma);
+			}
 
 			PreparedStatement preparedStatement = null;
 			ResultSet resultSet = null;
@@ -84,6 +97,8 @@ public class TallaDAOImpl implements TallaDAO {
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				
+				logger.debug(queryString);
+				
 				int i = 1;                
 				preparedStatement.setString(i++, idioma);
 				
@@ -91,14 +106,20 @@ public class TallaDAOImpl implements TallaDAO {
 
 				List<Talla> results = new ArrayList<Talla>();                        
 				Talla t = null;
-				while(resultSet.next()) {
-					t = loadNext(resultSet);
-					results.add(t);               	
+				int currentCount = 0;
+
+				if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+					do {
+						t = loadNext( resultSet);
+						results.add(t);               	
+						currentCount++;                	
+					} while ((currentCount < count) && resultSet.next()) ;
 				}
 
 				return results;
 
 			} catch (SQLException ex) {
+				logger.error(ex.getMessage(),ex);
 				throw new DataException(ex);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -109,6 +130,10 @@ public class TallaDAOImpl implements TallaDAO {
 		@Override
 		public Boolean exists(Connection connection, Integer id) 
 				throws DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 			
 			boolean exist = false;
 
@@ -125,9 +150,11 @@ public class TallaDAOImpl implements TallaDAO {
 
 
 				preparedStatement = connection.prepareStatement(queryString);
+				
+				logger.debug(queryString);
 
 				int i = 1;
-				preparedStatement.setLong(i++, id);
+				preparedStatement.setInt(i++, id);
 
 				resultSet = preparedStatement.executeQuery();
 
@@ -136,6 +163,7 @@ public class TallaDAOImpl implements TallaDAO {
 				}
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {
 				JDBCUtils.closeResultSet(resultSet);
@@ -145,8 +173,12 @@ public class TallaDAOImpl implements TallaDAO {
 			return exist;
 		}
 
-		public List<Talla> findByProducto(Connection connection, Integer idProducto, String idioma) 
+		public List<Talla> findByProducto(Connection connection, Integer idProducto, String idioma,int startIndex, int count) 
 				throws DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+idProducto+ " , Idioma="+idioma);
+			}
 			
 			PreparedStatement preparedStatement = null;
 			ResultSet resultSet = null;
@@ -163,6 +195,8 @@ public class TallaDAOImpl implements TallaDAO {
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				int i = 1;
 				preparedStatement.setInt(i++, idProducto);
@@ -173,14 +207,20 @@ public class TallaDAOImpl implements TallaDAO {
 				// Recupera la pagina de resultados
 				List<Talla> results = new ArrayList<Talla>();                        
 				Talla e = null;
-				while(resultSet.next()) {
-					e = loadNext(resultSet);
-					results.add(e);               	
+				int currentCount = 0;
+
+				if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+					do {
+						e = loadNext( resultSet);
+						results.add(e);               	
+						currentCount++;                	
+					} while ((currentCount < count) && resultSet.next()) ;
 				}
 
 				return results;
 
 			} catch (SQLException ex) {
+				logger.error(ex.getMessage(),ex);
 				throw new DataException(ex);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);

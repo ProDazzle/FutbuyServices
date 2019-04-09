@@ -10,6 +10,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.OfertaDAO;
 import com.fgc.futbuy.model.Oferta;
 import com.fgc.futbuy.service.OfertaCriteria;
@@ -21,6 +24,8 @@ import com.fgc.futbuy.exceptions.InstanceNotFoundException;
 
 public class OfertaDAOImpl implements OfertaDAO{
 	
+	private static Logger logger = LogManager.getLogger(OfertaDAOImpl.class);
+	
 	public OfertaDAOImpl() {
 		
 	}
@@ -28,6 +33,10 @@ public class OfertaDAOImpl implements OfertaDAO{
 	@Override
 	public Oferta findById(Connection connection, Integer id) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -40,6 +49,8 @@ public class OfertaDAOImpl implements OfertaDAO{
 			
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			int i = 1;                
 			preparedStatement.setInt(i++, id);
@@ -49,7 +60,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 			Oferta e = null;
 
 			if (resultSet.next()) {
-				e = loadNext(connection, resultSet);				
+				e = loadNext(resultSet);				
 			} else {
 				throw new InstanceNotFoundException("Customer with id " + id + 
 						"not found", Oferta.class.getName());
@@ -58,6 +69,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 			return e;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -68,6 +80,10 @@ public class OfertaDAOImpl implements OfertaDAO{
 	@Override
 	public Boolean exists(Connection connection, Integer id) 
 			throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
 		boolean exist = false;
 
 		PreparedStatement preparedStatement = null;
@@ -81,6 +97,8 @@ public class OfertaDAOImpl implements OfertaDAO{
 							"WHERE ID_OFERTA = ? ";
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -92,6 +110,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 			}
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -102,7 +121,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 	}
 
 	@Override
-	public List<Oferta> findAll(Connection connection) 
+	public List<Oferta> findAll(Connection connection,int startIndex, int count) 
 			throws DataException {
 
 		PreparedStatement preparedStatement = null;
@@ -117,19 +136,27 @@ public class OfertaDAOImpl implements OfertaDAO{
 
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			resultSet = preparedStatement.executeQuery();
 
 			List<Oferta> results = new ArrayList<Oferta>();                        
 			Oferta e = null;
-			while(resultSet.next()) {
-				e = loadNext(connection, resultSet);
-				results.add(e);               	
+			int currentCount = 0;
+
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					e = loadNext( resultSet);
+					results.add(e);               	
+					currentCount++;                	
+				} while ((currentCount < count) && resultSet.next()) ;
 			}
 
 			return results;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -151,8 +178,10 @@ public class OfertaDAOImpl implements OfertaDAO{
 							+ " FROM OFERTA";
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
-						resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
 			int i=1;
 			if (resultSet.next()) {
@@ -162,6 +191,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 			}
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -170,8 +200,12 @@ public class OfertaDAOImpl implements OfertaDAO{
 	}
 	
 	@Override
-	public List<Oferta> findByCriteria(Connection connection, OfertaCriteria oc)
+	public List<Oferta> findByCriteria(Connection connection, OfertaCriteria oc,int startIndex, int count)
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("OfertaCriteria= "+oc);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -206,6 +240,8 @@ public class OfertaDAOImpl implements OfertaDAO{
 			
 			preparedStatement = connection.prepareStatement(queryString.toString(),
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			int i = 1;       
 			
@@ -222,17 +258,19 @@ public class OfertaDAOImpl implements OfertaDAO{
 			
 			List<Oferta> results = new ArrayList<Oferta>();                        
 			Oferta e = null;
-			while (resultSet.next()) {
-				e = loadNext(connection, resultSet);						
-				results.add(e);
-			}
-			
-			if (results.isEmpty()) {
-				throw new DataException("No se han encontrado resultados");
+			int currentCount = 0;
+
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					e = loadNext( resultSet);
+					results.add(e);               	
+					currentCount++;                	
+				} while ((currentCount < count) && resultSet.next()) ;
 			}
 
 			return results;
 	} catch (SQLException e) {
+		logger.error(e.getMessage(),e);
 		throw new DataException("Hemos encontrado un problema" + e);
 	} finally {
 		JDBCUtils.closeResultSet(resultSet);
@@ -245,6 +283,10 @@ public class OfertaDAOImpl implements OfertaDAO{
 	@Override
 	public Oferta create(Connection connection, Oferta o) 
 			throws DuplicateInstanceException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Oferta= "+o);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -256,6 +298,8 @@ public class OfertaDAOImpl implements OfertaDAO{
 
 			preparedStatement = connection.prepareStatement(queryString,
 									Statement.RETURN_GENERATED_KEYS);
+			
+			logger.debug(queryString);
 
 			// Fill the "preparedStatement"
 			int i = 1;             
@@ -280,6 +324,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 			return o;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -290,6 +335,11 @@ public class OfertaDAOImpl implements OfertaDAO{
 	@Override
 	public void update(Connection connection, Oferta o) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Oferta= "+o);
+		}
+		
 		PreparedStatement preparedStatement = null;
 		try {
 
@@ -299,6 +349,8 @@ public class OfertaDAOImpl implements OfertaDAO{
 					"WHERE ID_OFERTA = ? ";
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			
@@ -319,6 +371,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);    
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -328,6 +381,10 @@ public class OfertaDAOImpl implements OfertaDAO{
 	@Override
 	public Integer delete(Connection connection, Integer id) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
 		PreparedStatement preparedStatement = null;
 
 		try {
@@ -337,6 +394,8 @@ public class OfertaDAOImpl implements OfertaDAO{
 					+ "WHERE ID_OFERTA = ? ";
 			
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -350,6 +409,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 			return removedRows;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -360,7 +420,7 @@ public class OfertaDAOImpl implements OfertaDAO{
 		queryString.append(first?" WHERE ": " AND ").append(clause);
 	}
 	
-	private Oferta loadNext(Connection connection, ResultSet resultSet)
+	private Oferta loadNext(ResultSet resultSet)
 		throws SQLException, DataException {
 
 			int i = 1;

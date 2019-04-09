@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.exceptions.PasswordEncryptionUtil;
 import com.fgc.futbuy.dao.DireccionDAO;
 import com.fgc.futbuy.dao.UsuarioDAO;
@@ -21,6 +24,8 @@ import com.fgc.futbuy.model.Usuario;
 
 
 public class UsuarioDAOImpl implements UsuarioDAO{
+	
+	private static Logger logger = LogManager.getLogger(UsuarioDAOImpl.class);
 
 	private DireccionDAO direccionDAO = null;
 
@@ -32,6 +37,12 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 	@Override
 	public Usuario findById(Connection connection, Integer id) 
 			throws InstanceNotFoundException, DataException{
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Id =",id);
+		}
+		
+		
 		Usuario u = null;
 
 		PreparedStatement preparedStatement = null;
@@ -42,11 +53,11 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			sql =  "SELECT ID_USUARIO, EMAIL, CONTRASENHA, NOMBRE_USUARIO, NOMBRE, APELLIDO1, APELLIDO2,  FECHA_NACIMIENTO, GENERO "
 					+"FROM USUARIO "
 					+"WHERE ID_USUARIO = ? ";
-
 			// Preparar a query
-			System.out.println("Creating statement...");
 			preparedStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
+			logger.debug(sql);	
+			
 			// Establece os parámetros
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -59,12 +70,14 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 				u =  loadNext(connection, resultSet);			
 				//System.out.println("Cargado "+u);
 			} else {
+				
 				throw new InstanceNotFoundException("Non se atopou usuario con id = "+id, Usuario.class.getName());
 			}
 
 			return u;
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -76,7 +89,10 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 
 	@Override
 	public Usuario findByEmail(Connection connection, String email) throws DataException {
-
+		if(logger.isDebugEnabled()){
+			logger.debug("Email =",email);
+		}
+		
 		Usuario u = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -90,9 +106,10 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 
 
 			// Preparar a query
-			System.out.println("Creating statement...");
 			preparedStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
+			logger.debug(sql);	
+			
 			// Establece os parámetros
 			int i = 1;
 			preparedStatement.setString(i++, "%"+email.toUpperCase()+"%");
@@ -108,6 +125,7 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			return u;
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -118,6 +136,10 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 	@Override
 	public List<Usuario> findAll(Connection connection)
 			throws DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("All ={1}");
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -128,9 +150,11 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 					+" FROM USUARIO ";
 
 			// Preparar a query
-			System.out.println("Creating statement...");
+
 			preparedStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
+			logger.debug(sql);	
+			
 			resultSet = preparedStatement.executeQuery();			
 			//STEP 5: Extract data from result set			
 
@@ -146,6 +170,7 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			return results;
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -189,6 +214,10 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 	@Override
 	public Usuario create(Connection connection, Usuario u)
 			throws DuplicateInstanceException, DataException{
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Usuario = ",u);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -199,6 +228,8 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 
 			preparedStatement = connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS);
 
+			logger.debug(queryString);	
+			
 			int i = 1;     			
 			preparedStatement.setString(i++, u.getEmail());
 			preparedStatement.setString(i++, PasswordEncryptionUtil.encryptPassword(u.getContrasenha()));
@@ -235,6 +266,7 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			return u;					
 
 		} catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -246,7 +278,11 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 	@Override
 	public void update(Connection connection, Usuario u) 
 			throws InstanceNotFoundException, DataException {
-
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Usuario =",u);
+		}
+		
 		PreparedStatement preparedStatement = null;
 		StringBuilder queryString = null;
 		try {	
@@ -291,6 +327,8 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			queryString.append("WHERE ID_USUARIO = ?");
 
 			preparedStatement = connection.prepareStatement(queryString.toString());
+			
+			logger.debug(queryString);
 
 
 			int i = 1;
@@ -326,6 +364,7 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			}     
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);    
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -335,6 +374,10 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 	@Override
 	public Integer delete(Connection connection, Integer id)
 			throws InstanceNotFoundException, DataException{
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Id =",id);
+		}
 
 		PreparedStatement preparedStatement = null;
 
@@ -351,6 +394,8 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -360,6 +405,7 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			return removedRows;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeStatement(preparedStatement);
@@ -371,6 +417,9 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 	@Override
 	public Boolean exists(Connection connection, Integer id) 
 			throws DataException {
+		if(logger.isDebugEnabled()){
+			logger.debug("Id =",id);
+		}
 		boolean exist = false;
 
 		PreparedStatement preparedStatement = null;
@@ -384,6 +433,8 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 							"WHERE ID_USUARIO = ? ";
 
 			preparedStatement = connection.prepareStatement(queryString);
+			
+			logger.debug(queryString);
 
 			int i = 1;
 			preparedStatement.setInt(i++, id);
@@ -395,6 +446,7 @@ public class UsuarioDAOImpl implements UsuarioDAO{
 			}
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);

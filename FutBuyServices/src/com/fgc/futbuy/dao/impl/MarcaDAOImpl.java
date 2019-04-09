@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.MarcaDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
 import com.fgc.futbuy.exceptions.DataException;
@@ -15,6 +18,8 @@ import com.fgc.futbuy.model.Marca;
 
 
 public class MarcaDAOImpl implements MarcaDAO {
+	
+	private static Logger logger = LogManager.getLogger(MarcaDAOImpl.class);
 		
 	
 		public MarcaDAOImpl() {
@@ -23,6 +28,10 @@ public class MarcaDAOImpl implements MarcaDAO {
 		@Override
 		public Marca findById(Connection connection, Integer id) 
 				throws InstanceNotFoundException, DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 
 			PreparedStatement preparedStatement = null;
 			ResultSet resultSet = null;
@@ -37,6 +46,8 @@ public class MarcaDAOImpl implements MarcaDAO {
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				int i = 1;                
 				preparedStatement.setInt(i++, id);
@@ -47,7 +58,7 @@ public class MarcaDAOImpl implements MarcaDAO {
 				Marca e = null;
 
 				if (resultSet.next()) {
-					e = loadNext(connection, resultSet);				
+					e = loadNext(resultSet);				
 				} else {
 					throw new InstanceNotFoundException("Marca with id " + id + 
 							"not found", Marca.class.getName());
@@ -56,6 +67,7 @@ public class MarcaDAOImpl implements MarcaDAO {
 				return e;
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -64,7 +76,7 @@ public class MarcaDAOImpl implements MarcaDAO {
 		}
 		
 		@Override
-		public List<Marca> findAll(Connection connection) 
+		public List<Marca> findAll(Connection connection,int startIndex, int count) 
 				throws DataException {
 
 			PreparedStatement preparedStatement = null;
@@ -79,19 +91,27 @@ public class MarcaDAOImpl implements MarcaDAO {
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				resultSet = preparedStatement.executeQuery();
 
 				List<Marca> results = new ArrayList<Marca>();                        
 				Marca m = null;
-				while(resultSet.next()) {
-					m = loadNext(connection, resultSet);
-					results.add(m);               	
+				int currentCount = 0;
+
+				if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+					do {
+						m = loadNext( resultSet);
+						results.add(m);               	
+						currentCount++;                	
+					} while ((currentCount < count) && resultSet.next()) ;
 				}
 
 				return results;
 
 			} catch (SQLException ex) {
+				logger.error(ex.getMessage(),ex);
 				throw new DataException(ex);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -102,6 +122,10 @@ public class MarcaDAOImpl implements MarcaDAO {
 		@Override
 		public Boolean exists(Connection connection, Integer id) 
 				throws DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 			
 			boolean exist = false;
 
@@ -117,6 +141,8 @@ public class MarcaDAOImpl implements MarcaDAO {
 
 
 				preparedStatement = connection.prepareStatement(queryString);
+				
+				logger.debug(queryString);
 
 				int i = 1;
 				preparedStatement.setInt(i++, id);
@@ -128,6 +154,7 @@ public class MarcaDAOImpl implements MarcaDAO {
 				}
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {
 				JDBCUtils.closeResultSet(resultSet);
@@ -140,7 +167,7 @@ public class MarcaDAOImpl implements MarcaDAO {
 	
 
 		
-		private Marca loadNext(Connection connection, ResultSet resultSet) 
+		private Marca loadNext(ResultSet resultSet) 
 				throws SQLException, DataException {
 
 			int i = 1;

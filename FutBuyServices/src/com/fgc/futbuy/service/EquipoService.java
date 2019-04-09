@@ -15,7 +15,7 @@ public interface EquipoService {
 	public Boolean exists(Integer id) 
 			throws DataException;
 	
-    public List<Equipo> findAll() 
+    public List<Equipo> findAll(int startIndex, int count) 
 	    	throws DataException; 
 
 }

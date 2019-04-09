@@ -16,13 +16,13 @@ public interface PedidoDAO {
 	public Pedido findById(Connection connection, Integer id) 
     		throws InstanceNotFoundException, DataException;
 	
-    public List<Pedido> findByCriteria(Connection connection, PedidoCriteria pedido)
+    public List<Pedido> findByCriteria(Connection connection, PedidoCriteria pedido,int startIndex, int count)
         	throws DataException;
     
-    public List<Pedido> findAll(Connection connection) 
+    public List<Pedido> findAll(Connection connection,int startIndex, int count) 
         	throws DataException;
     
-    public List<Pedido> findAllUsuario(Connection connection, Integer id) 
+    public List<Pedido> findAllUsuario(Connection connection, Integer id,int startIndex, int count) 
         	throws DataException;
          
 	public Boolean exists(Connection connection, Integer id) 

@@ -13,6 +13,6 @@ public interface IdiomaDAO {
 	public Idioma findById(Connection connection, String id) 
     		throws InstanceNotFoundException, DataException;
 	
-	public List<Idioma> findAll(Connection connection) 
+	public List<Idioma> findAll(Connection connection,int startIndex, int count) 
         	throws DataException;
 }

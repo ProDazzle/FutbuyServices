@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.IdiomaDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
 import com.fgc.futbuy.exceptions.DataException;
@@ -17,7 +20,7 @@ import com.fgc.futbuy.model.Idioma;
 
 public class IdiomaDAOImpl implements IdiomaDAO{
 	
-
+	private static Logger logger = LogManager.getLogger(IdiomaDAOImpl.class);
 	
 	public IdiomaDAOImpl() {
 	}
@@ -26,6 +29,10 @@ public class IdiomaDAOImpl implements IdiomaDAO{
 	@Override
 	public Idioma findById(Connection connection, String id) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+id);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -38,6 +45,8 @@ public class IdiomaDAOImpl implements IdiomaDAO{
 			
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			int i = 1;                
 			preparedStatement.setString(i++, id);
@@ -47,7 +56,7 @@ public class IdiomaDAOImpl implements IdiomaDAO{
 			Idioma e = null;
 
 			if (resultSet.next()) {
-				e = loadNext(connection, resultSet);				
+				e = loadNext(resultSet);				
 			} else {
 				throw new InstanceNotFoundException("Language with id " + id + 
 						"not found", Idioma.class.getName());
@@ -56,6 +65,7 @@ public class IdiomaDAOImpl implements IdiomaDAO{
 			return e;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {            
 			JDBCUtils.closeResultSet(resultSet);
@@ -64,7 +74,7 @@ public class IdiomaDAOImpl implements IdiomaDAO{
 	}
 
 	@Override
-	public List<Idioma> findAll(Connection connection) 
+	public List<Idioma> findAll(Connection connection,int startIndex, int count) 
 			throws DataException {
 
 		PreparedStatement preparedStatement = null;
@@ -79,19 +89,27 @@ public class IdiomaDAOImpl implements IdiomaDAO{
 
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			
+			logger.debug(queryString);
 
 			resultSet = preparedStatement.executeQuery();
 
 			List<Idioma> results = new ArrayList<Idioma>();                        
 			Idioma t = null;
-			while(resultSet.next()) {
-				t = loadNext(connection, resultSet);
-				results.add(t);               	
+			int currentCount = 0;
+
+			if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+				do {
+					t = loadNext( resultSet);
+					results.add(t);               	
+					currentCount++;                	
+				} while ((currentCount < count) && resultSet.next()) ;
 			}
 
 			return results;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -100,7 +118,7 @@ public class IdiomaDAOImpl implements IdiomaDAO{
 	}
 	
 		
-	private Idioma loadNext(Connection connection, ResultSet resultSet)
+	private Idioma loadNext(ResultSet resultSet)
 		throws SQLException, DataException {
 
 			int i = 1;

@@ -12,13 +12,13 @@ public interface OfertaService {
 	public Oferta findById(Integer id) 
     		throws InstanceNotFoundException, DataException;
 	
-	public List<Oferta> findByCriteria(OfertaCriteria Oferta)
+	public List<Oferta> findByCriteria(OfertaCriteria Oferta, int startIndex, int count)
 	   	    throws InstanceNotFoundException,DataException;
 	
     public Boolean exists(Integer id) 
     		throws DataException;
 
-    public List<Oferta> findAll() 
+    public List<Oferta> findAll(int startIndex, int count) 
     		 throws DataException;
      
     public Integer countAll() 

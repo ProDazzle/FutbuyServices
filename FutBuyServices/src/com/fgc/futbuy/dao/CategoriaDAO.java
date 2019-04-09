@@ -9,7 +9,7 @@ import com.fgc.futbuy.model.Categoria;
 
 public interface CategoriaDAO {
 	
-	public Categoria findById(Connection connection, Integer id) 
+	public Categoria findById(Connection connection, Integer id, String idioma) 
 			throws InstanceNotFoundException, DataException;
 	
 	public Boolean exists(Connection connection, Integer id) 

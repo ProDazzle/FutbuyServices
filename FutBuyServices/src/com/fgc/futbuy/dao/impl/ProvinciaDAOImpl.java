@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.ProvinciaDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
 import com.fgc.futbuy.exceptions.DataException;
@@ -14,11 +17,15 @@ import com.fgc.futbuy.model.Provincia;
 
 public class ProvinciaDAOImpl implements ProvinciaDAO{
 
-	
+	private static Logger logger = LogManager.getLogger(ProvinciaDAOImpl.class);
 
 	@Override
 	public List<Provincia> findByPaisIdioma(Connection connection, Integer idPais, String idIdioma)
 					throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Id= "+idPais+" , Idioma = "+idIdioma);
+		}
 
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -38,6 +45,8 @@ public class ProvinciaDAOImpl implements ProvinciaDAO{
 			preparedStatement = connection.prepareStatement(queryString,
 					ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			
+			logger.debug(queryString);
+			
 			int i = 1;                
 			preparedStatement.setInt(i++, idPais);
 			preparedStatement.setString(i++, idIdioma);
@@ -49,12 +58,13 @@ public class ProvinciaDAOImpl implements ProvinciaDAO{
 			Provincia p = null;
 
 			while (resultSet.next()) {
-				p = loadNext (connection,resultSet);
+				p = loadNext (resultSet);
 				results.add(p);
 			}
 			return results;
 
 		} catch (SQLException e) {
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeResultSet(resultSet);
@@ -62,7 +72,7 @@ public class ProvinciaDAOImpl implements ProvinciaDAO{
 		}
 	}
 	
-	private Provincia loadNext(Connection connection, ResultSet resultSet) throws SQLException, DataException{
+	private Provincia loadNext(ResultSet resultSet) throws SQLException, DataException{
 
 
 		int i = 1;

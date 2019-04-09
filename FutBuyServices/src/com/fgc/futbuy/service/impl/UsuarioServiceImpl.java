@@ -4,7 +4,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
 
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fgc.futbuy.service.UsuariosUtils;
 import com.fgc.futbuy.service.impl.MailServiceImpl;
@@ -27,6 +28,8 @@ import com.fgc.futbuy.service.UsuarioService;
 
 public class UsuarioServiceImpl implements UsuarioService{
 	
+	private static Logger logger = LogManager.getLogger(UsuarioServiceImpl.class);
+	
 	UsuarioDAO usuarioDAO = null;
 	DireccionDAO direccionDAO = null;
 	private MailService mailService = new MailServiceImpl();
@@ -38,21 +41,30 @@ public class UsuarioServiceImpl implements UsuarioService{
 
 	@Override
 	public Usuario findById(Integer id) throws InstanceNotFoundException, DataException {
+		long t0, t1, t2, t3;
+		if(logger.isDebugEnabled()){
+			logger.debug("Id ={0} ",id);
+		}
 		Connection c = null;
 		
 	try {
-		
+		t0= System.currentTimeMillis();
 		c = ConnectionManager.getConnection();
+		t1= System.currentTimeMillis();
 		c.setAutoCommit(true);
 		
 		Usuario u = usuarioDAO.findById(c,id); 
-		
+		t2= System.currentTimeMillis();
 		return u;
 		
 	} catch (SQLException e){
+		
+		logger.error(e.getMessage(),e);
+		
 		throw new DataException(e);
 	} finally {
 		JDBCUtils.closeConnection(c);
+		t3= System.currentTimeMillis();
 	}
 		
 	}
@@ -60,6 +72,10 @@ public class UsuarioServiceImpl implements UsuarioService{
 	@Override
 	public Boolean exists(Integer id) 
 			throws DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Id ={0} ",id);
+		}
 				
 		Connection c = null;
 		
@@ -73,6 +89,8 @@ public class UsuarioServiceImpl implements UsuarioService{
 			return usuarioDAO.exists(c, id);
 			
 		} catch (SQLException e){
+			logger.error(e.getMessage(),e);
+			
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeConnection(c);
@@ -83,6 +101,10 @@ public class UsuarioServiceImpl implements UsuarioService{
 	@Override
 	public Usuario create(Usuario u)
 			throws  DuplicateInstanceException, DataException, MailException {
+		if(logger.isDebugEnabled()){
+			logger.debug("Usuario ={0} ",u);
+		}
+		
 		boolean commit = false;
 		Connection c = null;
 		MailService mailService = null;
@@ -104,6 +126,8 @@ public class UsuarioServiceImpl implements UsuarioService{
 		return u;
 		
 	} catch (SQLException e){
+		logger.error(e.getMessage(),e);
+		
 		throw new DataException(e);
 	} finally {
 		JDBCUtils.closeConnection(c,commit);
@@ -112,6 +136,11 @@ public class UsuarioServiceImpl implements UsuarioService{
 	
 	@Override
 	public Usuario login(String email, String password) throws DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Email ={0} Password = {1} ",email,(password==null));
+		}
+		
 		Connection connection = null;
 		
 	try {
@@ -150,6 +179,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 		
 				
 			} catch (SQLException e){
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {
 				JDBCUtils.closeConnection(connection);
@@ -160,6 +190,10 @@ public class UsuarioServiceImpl implements UsuarioService{
 	@Override
 	public void update(Usuario u) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Usuario ={0} ",u);
+		}
 		
 	    Connection connection = null;
         boolean commit = false;
@@ -177,6 +211,7 @@ public class UsuarioServiceImpl implements UsuarioService{
             commit = true;
             
         } catch (SQLException e) {
+        	logger.error(e.getMessage(),e);
             throw new DataException(e);
 
         } finally {
@@ -186,6 +221,10 @@ public class UsuarioServiceImpl implements UsuarioService{
 
 	@Override
 	public Integer delete(Integer id) throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Id ={0} ",id);
+		}
 		Connection connection = null;
         boolean commit = false;
         Integer result = null;
@@ -209,6 +248,7 @@ public class UsuarioServiceImpl implements UsuarioService{
             return result;
             
         } catch (SQLException e) {
+        	logger.error(e.getMessage(),e);
             throw new DataException(e);
 
         } finally {
@@ -219,6 +259,11 @@ public class UsuarioServiceImpl implements UsuarioService{
 	@Override
 	public Usuario findByEmailToRecovery(String email) 
 			throws MailException, DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Email ={0} ",email);
+		}
+		
 		Connection c = null;
 		try {
 			c = ConnectionManager.getConnection();
@@ -229,6 +274,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 			return e;
 
 		}catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException("Hemos encontrado algún problema, por favor comprueba los datos");
 		} finally {   
 			JDBCUtils.closeConnection(c);
@@ -236,6 +282,11 @@ public class UsuarioServiceImpl implements UsuarioService{
 	}
 
 	public void cambiarContra(Integer codigo, String email, String psswd) throws DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Codigo ={0}, Email ={1}, Password ={2}",codigo, email, (psswd==null));
+		}
+		
 		Connection c = null;
 		boolean commit = false;
 		try {
@@ -258,6 +309,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 				throw new DataException("El código introducido no coincide, compruebe el código");
 			}
 		}catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		}finally {
 			JDBCUtils.closeConnection(c, commit);
@@ -266,6 +318,11 @@ public class UsuarioServiceImpl implements UsuarioService{
 	
 	@Override
 	public void editDireccion(Direccion direccion, Usuario u) throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Direccion ={0}, Usuario ={1}", direccion, u);
+		}
+		
 		  Connection connection = null;
 	        boolean commit = false;
 	        Direccion d = null;
@@ -288,6 +345,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 	            direccionDAO.create(connection, direccion);
 	            
 	        } catch (SQLException e) {
+	        	logger.error(e.getMessage(),e);
 	            throw new DataException(e);
 
 	        } finally {
@@ -297,6 +355,11 @@ public class UsuarioServiceImpl implements UsuarioService{
 
 	public void setCodigo (Usuario u) 
 			throws MailException, DataException{
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Usuario ={0} ",u);
+		}
+		
 		Connection c = null;
 		boolean commit = false;
 		try {
@@ -311,6 +374,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 			mailService.sendMail(u.getEmail(), "Restablecer contraseña", mssg);
 			commit = true;
 		}catch (SQLException ex) {
+			logger.error(ex.getMessage(),ex);
 			throw new DataException(ex);
 		}finally {
 			JDBCUtils.closeConnection(c, commit);

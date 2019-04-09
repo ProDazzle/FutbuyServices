@@ -12,6 +12,6 @@ public interface IdiomaService {
 		public Idioma findById(String id) 
 				throws InstanceNotFoundException, DataException;
 		
-	    public List<Idioma> findAll() 
+	    public List<Idioma> findAll(int startIndex, int count) 
 		    	throws DataException; 
 }

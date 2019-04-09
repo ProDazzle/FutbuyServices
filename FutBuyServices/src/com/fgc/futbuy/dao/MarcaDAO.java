@@ -15,6 +15,6 @@ public interface MarcaDAO {
 	public Boolean exists(Connection connection, Integer id) 
     		throws DataException;
 	
-    public List<Marca> findAll(Connection connection) 
+    public List<Marca> findAll(Connection connection,int startIndex, int count) 
         	throws DataException;
 }

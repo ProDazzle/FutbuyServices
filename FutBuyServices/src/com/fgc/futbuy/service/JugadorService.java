@@ -16,10 +16,10 @@ public interface JugadorService {
 	public Boolean exists(Integer id) 
 			throws DataException;
 
-	public List<Jugador> findByProducto(Integer id) 
+	public List<Jugador> findByProducto(Integer id, int startIndex, int count) 
 			throws DataException;
 	
-    public List<Jugador> findAll() 
+    public List<Jugador> findAll(int startIndex, int count) 
 	    	throws DataException; 
 
 }

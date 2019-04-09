@@ -1,11 +1,12 @@
 package com.fgc.futbuy.service;
 
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 
 import com.fgc.futbuy.exceptions.DataException;
 import com.fgc.futbuy.model.Pais;
 import com.fgc.futbuy.service.impl.PaisServicesImpl;
-import com.fgc.futbuy.service.PaisService;
 
 public class PaisServicesTest {
 
@@ -21,6 +22,13 @@ public class PaisServicesTest {
 		
 		for(Pais p: paises) {
 			System.out.println("" + p);
+		}
+		
+		Properties systemProperties = System.getProperties();
+		String key = null;
+		for (Enumeration keys = systemProperties.keys(); keys.hasMoreElements();) {
+			key = (String) keys.nextElement();
+			System.out.println(key+"="+System.getProperty(key));
 		}
 			
 	}

@@ -9,15 +9,15 @@ import com.fgc.futbuy.model.Color;
 
 public interface ColorDAO {
 	
-	public Color findById(Connection connection, Integer id) 
+	public Color findById(Connection connection, Integer id, String idioma) 
 			throws InstanceNotFoundException, DataException;
 	
 	public Boolean exists(Connection connection, Integer id) 
     		throws DataException;
 
-	public List<Color> findByProducto(Connection connection, Integer idProducto, String Idioma) 
+	public List<Color> findByProducto(Connection connection, Integer idProducto, String Idioma,int startIndex, int count) 
 			throws DataException;
 	
-    public List<Color> findAll(Connection connection, String Idioma) 
+    public List<Color> findAll(Connection connection, String Idioma,int startIndex, int count) 
         	throws DataException;
 }

@@ -7,7 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fgc.futbuy.dao.JugadorDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
@@ -18,7 +19,7 @@ import com.fgc.futbuy.model.Jugador;
 
 public class JugadorDAOImpl implements JugadorDAO {
 		
-
+	private static Logger logger = LogManager.getLogger(CategoriaDAOImpl.class);
 	
 		public JugadorDAOImpl() {
 		}
@@ -26,6 +27,10 @@ public class JugadorDAOImpl implements JugadorDAO {
 		@Override
 		public Jugador findById(Connection connection, Integer id) 
 				throws InstanceNotFoundException, DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 
 			PreparedStatement preparedStatement = null;
 			ResultSet resultSet = null;
@@ -40,6 +45,8 @@ public class JugadorDAOImpl implements JugadorDAO {
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				int i = 1;                
 				preparedStatement.setInt(i++, id);
@@ -50,7 +57,7 @@ public class JugadorDAOImpl implements JugadorDAO {
 				Jugador e = null;
 
 				if (resultSet.next()) {
-					e = loadNext(connection, resultSet);				
+					e = loadNext(resultSet);				
 				} else {
 					throw new InstanceNotFoundException("Categories with id " + id + 
 							"not found", Jugador.class.getName());
@@ -59,6 +66,7 @@ public class JugadorDAOImpl implements JugadorDAO {
 				return e;
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -67,7 +75,7 @@ public class JugadorDAOImpl implements JugadorDAO {
 		}
 		
 		@Override
-		public List<Jugador> findAll(Connection connection) 
+		public List<Jugador> findAll(Connection connection,int startIndex, int count) 
 				throws DataException {
 
 			PreparedStatement preparedStatement = null;
@@ -82,19 +90,27 @@ public class JugadorDAOImpl implements JugadorDAO {
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				resultSet = preparedStatement.executeQuery();
 
 				List<Jugador> results = new ArrayList<Jugador>();                        
 				Jugador m = null;
-				while(resultSet.next()) {
-					m = loadNext(connection, resultSet);
-					results.add(m);               	
+				int currentCount = 0;
+
+				if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+					do {
+						m = loadNext( resultSet);
+						results.add(m);               	
+						currentCount++;                	
+					} while ((currentCount < count) && resultSet.next()) ;
 				}
 
 				return results;
 
 			} catch (SQLException ex) {
+				logger.error(ex.getMessage(),ex);
 				throw new DataException(ex);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -105,6 +121,10 @@ public class JugadorDAOImpl implements JugadorDAO {
 		@Override
 		public Boolean exists(Connection connection, Integer id) 
 				throws DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 			
 			boolean exist = false;
 
@@ -120,6 +140,8 @@ public class JugadorDAOImpl implements JugadorDAO {
 
 
 				preparedStatement = connection.prepareStatement(queryString);
+				
+				logger.debug(queryString);
 
 				int i = 1;
 				preparedStatement.setInt(i++, id);
@@ -131,6 +153,7 @@ public class JugadorDAOImpl implements JugadorDAO {
 				}
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {
 				JDBCUtils.closeResultSet(resultSet);
@@ -140,7 +163,7 @@ public class JugadorDAOImpl implements JugadorDAO {
 			return exist;
 		}
 
-		public List<Jugador> findByProducto(Connection connection, Integer idProducto) 
+		public List<Jugador> findByProducto(Connection connection, Integer idProducto,int startIndex, int count) 
 				throws DataException {
 			
 			PreparedStatement preparedStatement = null;
@@ -166,9 +189,14 @@ public class JugadorDAOImpl implements JugadorDAO {
 				// Recupera la pagina de resultados
 				List<Jugador> results = new ArrayList<Jugador>();                        
 				Jugador e = null;
-				while(resultSet.next()) {
-					e = loadNext(connection, resultSet);
-					results.add(e);               	
+				int currentCount = 0;
+
+				if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+					do {
+						e = loadNext( resultSet);
+						results.add(e);               	
+						currentCount++;                	
+					} while ((currentCount < count) && resultSet.next()) ;
 				}
 
 				return results;
@@ -182,7 +210,7 @@ public class JugadorDAOImpl implements JugadorDAO {
 		}
 
 		
-		private Jugador loadNext(Connection connection, ResultSet resultSet) 
+		private Jugador loadNext(ResultSet resultSet) 
 				throws SQLException, DataException {
 
 			int i = 1;

@@ -9,15 +9,15 @@ import com.fgc.futbuy.model.Talla;
 
 public interface TallaDAO {
 	
-	public Talla findById(Connection connection, Integer id) 
+	public Talla findById(Connection connection, Integer id, String idioma) 
 			throws InstanceNotFoundException, DataException;
 	
 	public Boolean exists(Connection connection, Integer id) 
     		throws DataException;
 
-	public List<Talla> findByProducto(Connection connection, Integer idProducto, String Idioma) 
+	public List<Talla> findByProducto(Connection connection, Integer idProducto, String Idioma,int startIndex, int count) 
 			throws DataException;
 	
-    public List<Talla> findAll(Connection connection, String Idioma) 
+    public List<Talla> findAll(Connection connection, String Idioma,int startIndex, int count) 
         	throws DataException;
 }

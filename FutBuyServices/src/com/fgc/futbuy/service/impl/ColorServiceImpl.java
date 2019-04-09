@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.ColorDAO;
 import com.fgc.futbuy.dao.impl.ColorDAOImpl;
 import com.fgc.futbuy.dao.util.ConnectionManager;
@@ -14,15 +17,21 @@ import com.fgc.futbuy.model.Color;
 import com.fgc.futbuy.service.ColorService;
 
 public class ColorServiceImpl implements ColorService {
+	
+	private static Logger logger = LogManager.getLogger(ColorServiceImpl.class);
 
 	private ColorDAO dao = null;
 	
 	public ColorServiceImpl() {
 		dao = new ColorDAOImpl();
 	}
-	
-	public Color findById(Integer id) 
+	@Override
+	public Color findById(Integer id, String idioma) 
 			throws InstanceNotFoundException, DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("id= "+id+" , idioma = "+idioma);
+		}
 				
 		Connection connection = null;
 		
@@ -31,19 +40,24 @@ public class ColorServiceImpl implements ColorService {
 			connection = ConnectionManager.getConnection();
 			connection.setAutoCommit(true);
 			
-			return dao.findById(connection, id);	
+			return dao.findById(connection, id, idioma);	
 			
 		} catch (SQLException e){
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeConnection(connection);
 		}
 		
 	}
-
-	public List<Color> findAll(String idioma) 
+	@Override
+	public List<Color> findAll(String idioma, int startIndex, int count) 
 			throws DataException {
-			
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Idioma = "+idioma);
+		}
+				
 		Connection connection = null;
 		
 		try {
@@ -51,18 +65,23 @@ public class ColorServiceImpl implements ColorService {
 			connection = ConnectionManager.getConnection();
 			connection.setAutoCommit(true);
 			
-			return dao.findAll(connection, idioma);	
+			return dao.findAll(connection, idioma,1,10);	
 			
 		} catch (SQLException e){
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeConnection(connection);
 		}
 		
 	}
-	
+	@Override
 	public Boolean exists(Integer id) 
 			throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("id= "+id);
+		}
 				
 		Connection connection = null;
 		
@@ -74,6 +93,7 @@ public class ColorServiceImpl implements ColorService {
 			return dao.exists(connection, id);
 			
 		} catch (SQLException e){
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeConnection(connection);
@@ -81,8 +101,13 @@ public class ColorServiceImpl implements ColorService {
 		
 	}
 
-	public List<Color> findByProducto(Integer id, String idioma) 
+	public List<Color> findByProducto(Integer id, String idioma,int startIndex, int count) 
 			throws DataException {
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("id= "+id+" , idioma = "+idioma);
+		}
+			
 				
 		Connection connection = null;
 		
@@ -91,9 +116,10 @@ public class ColorServiceImpl implements ColorService {
 			connection = ConnectionManager.getConnection();
 			connection.setAutoCommit(true);
 			
-			return dao.findByProducto(connection, id, idioma);	
+			return dao.findByProducto(connection, id, idioma,1,10);	
 			
 		} catch (SQLException e){
+			logger.error(e.getMessage(),e);
 			throw new DataException(e);
 		} finally {
 			JDBCUtils.closeConnection(connection);

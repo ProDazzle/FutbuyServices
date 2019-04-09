@@ -15,6 +15,6 @@ public interface EquipoDAO {
 	public Boolean exists(Connection connection, Integer id) 
     		throws DataException;
 	
-    public List<Equipo> findAll(Connection connection) 
+    public List<Equipo> findAll(Connection connection,int startIndex, int count) 
         	throws DataException;
 }

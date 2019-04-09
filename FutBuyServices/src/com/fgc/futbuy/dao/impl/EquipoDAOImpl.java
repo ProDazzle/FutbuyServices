@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fgc.futbuy.dao.EquipoDAO;
 import com.fgc.futbuy.dao.util.JDBCUtils;
 import com.fgc.futbuy.exceptions.DataException;
@@ -16,6 +19,7 @@ import com.fgc.futbuy.model.Equipo;
 
 public class EquipoDAOImpl implements EquipoDAO {
 		
+	private static Logger logger = LogManager.getLogger(EquipoDAOImpl.class);
 	
 		public EquipoDAOImpl() {
 		}
@@ -23,6 +27,10 @@ public class EquipoDAOImpl implements EquipoDAO {
 		@Override
 		public Equipo findById(Connection connection, Integer id) 
 				throws InstanceNotFoundException, DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 
 			PreparedStatement preparedStatement = null;
 			ResultSet resultSet = null;
@@ -37,6 +45,8 @@ public class EquipoDAOImpl implements EquipoDAO {
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				int i = 1;                
 				preparedStatement.setInt(i++, id);
@@ -47,7 +57,7 @@ public class EquipoDAOImpl implements EquipoDAO {
 				Equipo e = null;
 
 				if (resultSet.next()) {
-					e = loadNext(connection, resultSet);				
+					e = loadNext(resultSet);				
 				} else {
 					throw new InstanceNotFoundException("Equipo with id " + id + 
 							"not found", Equipo.class.getName());
@@ -56,6 +66,7 @@ public class EquipoDAOImpl implements EquipoDAO {
 				return e;
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -64,7 +75,7 @@ public class EquipoDAOImpl implements EquipoDAO {
 		}
 		
 		@Override
-		public List<Equipo> findAll(Connection connection) 
+		public List<Equipo> findAll(Connection connection,int startIndex, int count) 
 				throws DataException {
 
 			PreparedStatement preparedStatement = null;
@@ -79,19 +90,27 @@ public class EquipoDAOImpl implements EquipoDAO {
 
 				preparedStatement = connection.prepareStatement(queryString,
 						ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				
+				logger.debug(queryString);
 
 				resultSet = preparedStatement.executeQuery();
 
 				List<Equipo> results = new ArrayList<Equipo>();                        
 				Equipo m = null;
-				while(resultSet.next()) {
-					m = loadNext(connection, resultSet);
-					results.add(m);               	
+				int currentCount = 0;
+
+				if ((startIndex >=1) && resultSet.absolute(startIndex)) {
+					do {
+						m = loadNext( resultSet);
+						results.add(m);               	
+						currentCount++;                	
+					} while ((currentCount < count) && resultSet.next()) ;
 				}
 
 				return results;
 
 			} catch (SQLException ex) {
+				logger.error(ex.getMessage(),ex);
 				throw new DataException(ex);
 			} finally {            
 				JDBCUtils.closeResultSet(resultSet);
@@ -102,6 +121,10 @@ public class EquipoDAOImpl implements EquipoDAO {
 		@Override
 		public Boolean exists(Connection connection, Integer id) 
 				throws DataException {
+			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Id= "+id);
+			}
 			
 			boolean exist = false;
 
@@ -117,6 +140,8 @@ public class EquipoDAOImpl implements EquipoDAO {
 
 
 				preparedStatement = connection.prepareStatement(queryString);
+				
+				logger.debug(queryString);
 
 				int i = 1;
 				preparedStatement.setInt(i++, id);
@@ -128,6 +153,7 @@ public class EquipoDAOImpl implements EquipoDAO {
 				}
 
 			} catch (SQLException e) {
+				logger.error(e.getMessage(),e);
 				throw new DataException(e);
 			} finally {
 				JDBCUtils.closeResultSet(resultSet);
@@ -140,7 +166,7 @@ public class EquipoDAOImpl implements EquipoDAO {
 	
 
 		
-		private Equipo loadNext(Connection connection, ResultSet resultSet) 
+		private Equipo loadNext(ResultSet resultSet) 
 				throws SQLException, DataException {
 
 			int i = 1;

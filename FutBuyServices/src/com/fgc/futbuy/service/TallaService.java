@@ -10,16 +10,16 @@ import com.fgc.futbuy.model.Talla;
 
 public interface TallaService {
 	
-	public Talla findById(Integer id) 
+	public Talla findById(Integer id, String idioma) 
 			throws InstanceNotFoundException, DataException;
 
 	public Boolean exists(Integer id) 
 			throws DataException;
 
-	public List<Talla> findByProducto(Integer id, String idioma) 
+	public List<Talla> findByProducto(Integer id, String idioma,int startIndex, int count) 
 			throws DataException;
 	
-    public List<Talla> findAll(String idioma) 
+    public List<Talla> findAll(String idioma,int startIndex, int count) 
 	    	throws DataException; 
 
 }

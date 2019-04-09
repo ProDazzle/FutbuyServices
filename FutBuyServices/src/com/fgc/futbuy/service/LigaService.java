@@ -15,7 +15,7 @@ public interface LigaService {
 	public Boolean exists(Integer id) 
 			throws DataException;
 	
-    public List<Liga> findAll() 
+    public List<Liga> findAll(int startIndex, int count) 
 	    	throws DataException; 
 
 }
